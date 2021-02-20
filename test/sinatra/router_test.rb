@@ -119,7 +119,7 @@ describe Sinatra::Router do
           end
         end
 
-        run AppWithMethodOverride
+        run ->(_env) { [404, {}, []] }
       end
     end
 
