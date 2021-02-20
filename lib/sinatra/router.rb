@@ -4,6 +4,10 @@ module Sinatra
   # A Sinatra router that allows multiple Sinatra applications to be composed
   # together.
   class Router
+    METHOD_OVERRIDE_PARAM_KEY = '_method'
+    REQUEST_FORM_KEY = 'rack.request.from_hash'
+    ALLOWED_METHODS = ['POST']
+
     def initialize(app = nil, *_args, &block)
       @app        = app
       @apps       = []
@@ -15,7 +19,7 @@ module Sinatra
     end
 
     def call(env)
-      if (ret = try_route(env['REQUEST_METHOD'], env['PATH_INFO'], env))
+      if (ret = try_route(request_method(env), env['PATH_INFO'], env))
         ret
       else
         if !@app && !@run
@@ -86,7 +90,6 @@ module Sinatra
       if (verb_routes = @routes[verb])
         verb_routes.each do |pattern, conditions, app|
           next if !pattern.match(path) || !conditions_match?(conditions, env)
-
           status, headers, response = app.call(env)
 
           # if we got a pass, keep trying routes
@@ -96,6 +99,17 @@ module Sinatra
         end
       end
       nil
+    end
+
+    def request_method(env)
+      return env['REQUEST_METHOD'] if !@app.respond_to?(:method_override) || !@app.method_override
+
+      if ALLOWED_METHODS.include? env['REQUEST_METHOD']
+        req = Rack::Request.new(env)
+        req.POST[METHOD_OVERRIDE_PARAM_KEY].to_s.upcase
+      else
+        env['REQUEST_METHOD']
+      end
     end
   end
 end
