@@ -5,7 +5,6 @@ module Sinatra
   # together.
   class Router
     METHOD_OVERRIDE_PARAM_KEY = '_method'
-    REQUEST_FORM_KEY = 'rack.request.from_hash'
     ALLOWED_METHODS = ['POST']
 
     def initialize(app = nil, *_args, &block)
